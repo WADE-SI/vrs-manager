@@ -36,7 +36,7 @@ const Login = () => {
 
     return (
         <Container>
-            <Title>Welcome Back, UserName</Title>
+            <Title>Welcome Back, Verus</Title>
             <DateInfo>{today.toLocaleDateString('en-US')}</DateInfo>
             
             <Card>
