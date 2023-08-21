@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 import Container from "../components/Container";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
-        
-import data from './data.json';
+
+import axios from 'axios';
+
+import { atGigabytes } from '../service/gbto';
+
 
 const Title = styled.p`
     font-weight: 500;
@@ -26,22 +29,33 @@ const Card = styled.div`
 `;
 
 const Login = () => {
+
+    const [data,setData] = useState({});
+    const [bandwidth, setBandwidth] = useState([]);
     let today = new Date();
 
-    let bandwidth = [];
+    useEffect(() => {
+        axios.get('https://api.wadeia.cloud/verus/bandwidth/usage')
+        .then((response) => {
+            setData(response.data);
+            setBandwidth([]);
 
-    Object.keys(data.detail).forEach((key)=>{
-        bandwidth.push({"name":key, "bandwidth":Number((data.detail[key][0]+data.detail[key][1]).toFixed(1))});
-    });
+            Object.keys(response.data.detail).forEach((key)=>{
+                setBandwidth(resource => [...resource,{"name":key, "bandwidth":Number((response.data.detail[key][0]+response.data.detail[key][1]).toFixed(1))}]);
+            });
 
-    return (
+        });
+    },[]);
+
+    return  (
+        data &&
         <Container>
             <Title>Welcome Back, Verus</Title>
             <DateInfo>{today.toLocaleDateString('en-US')}</DateInfo>
             
             <Card>
                 <p style={{marginTop:0,marginBottom:'10px'}}>한달 총 사용량</p>
-                <h1 style={{margin: 0}}>{(data.incoming+data.outgoing).toFixed(1)}GB</h1>
+                <h1 style={{margin: 0}}> {atGigabytes((data.incoming+data.outgoing))}</h1>
             </Card>
 
             <Title style={{marginTop:'50px'}}>Bandwidth Per Month</Title>
