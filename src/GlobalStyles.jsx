@@ -8,7 +8,9 @@ const GlobalStyles = createGlobalStyle`
   }
 
   html, body {
+    margin: 0;
     font-size: 14px;
+    background-color: #fff;
   }
 `
 

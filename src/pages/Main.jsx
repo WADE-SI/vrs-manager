@@ -2,71 +2,133 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 import Container from "../components/Container";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
-
 import axios from 'axios';
 
-import { atGigabytes } from '../service/gbto';
+import Chart from 'react-apexcharts'
 
+import { formatNumber } from '../service/formatNumber';
+
+// PrimeReact
+import { InputSwitch } from "primereact/inputswitch";
+
+const Header = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 70px;
+    margin-bottom: 50px;
+    h1{
+        margin: 0;
+    }
+    .menu{
+        display: flex;
+        gap: 10px;
+        .info{
+            padding-top: 5px;
+            color: #00000080;
+        }
+    }
+`;
+
+const Grid = styled.div`
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+`;
+
+const Box = styled.div`
+    width: 33.3%;
+    padding: 15px 25px;
+    background-color: #e5e5e5;
+    border-radius: 7px;
+    overflow: hidden;
+`;
 
 const Title = styled.p`
-    font-weight: 500;
-    font-size: 24px;
-    margin-bottom: 0;
+    margin-top: 7px;
+    font-size: 18px;
 `;
 
-const DateInfo = styled.p`
-    margin-top: 10px;
-    font-size: 14px;
-    color: #4b5563;
-`;
-
-const Card = styled.div`
-    padding: 25px;
-    background-color: #f3f4f6;
-    border-radius: 10px;
-    margin-top: 30px;
+const Value = styled.p`
+    margin: 0;
+    font-size: 32px;
+    padding-top: 5px;
+    span{
+        font-size: 20px;
+        margin-left: 5px;
+        font-weight: bold;
+        color: #00000080;
+    }
 `;
 
 const Login = () => {
 
     const [data,setData] = useState({});
+    const [date,setDate] = useState({});
     const [bandwidth, setBandwidth] = useState([]);
-    let today = new Date();
-
+    const [overview, setOverview] = useState(false);
+    
     useEffect(() => {
         axios.get('https://api.wadeia.cloud/verus/bandwidth/usage')
         .then((response) => {
-            setData(response.data);
             setBandwidth([]);
 
-            Object.keys(response.data.detail).forEach((key)=>{
-                setBandwidth(resource => [...resource,{"name":key, "bandwidth":Number((response.data.detail[key][0]+response.data.detail[key][1]).toFixed(1))}]);
-            });
+            setData(response.data);
 
+            setDate(Object.keys(response.data.detail));
+            Object.keys(response.data.detail).forEach((key)=>{
+                setBandwidth(resource => [...resource, Number((response.data.detail[key][0]+response.data.detail[key][1]).toFixed(1))]);
+            });
         });
     },[]);
 
     return  (
         data &&
         <Container>
-            <Title>Welcome Back, Verus</Title>
-            <DateInfo>{today.toLocaleDateString('en-US')}</DateInfo>
             
-            <Card>
-                <p style={{marginTop:0,marginBottom:'10px'}}>한달 총 사용량</p>
-                <h1 style={{margin: 0}}> {atGigabytes((data.incoming+data.outgoing))}</h1>
-            </Card>
+            <Header>
+                <h1>Traffic</h1>
+                <div className='menu'>
+                    <span className='info'>자세히 보기</span>
+                    <InputSwitch checked={overview} onChange={(e) => !isNaN(data.incoming)&&setOverview(e.value)} />
+                </div>
+            </Header>
 
-            <Title style={{marginTop:'50px'}}>Bandwidth Per Month</Title>
-            <label style={{color: '#9ca3af'}}>단위 : Gb</label>
-            <LineChart width={800} height={350} data={bandwidth} margin={{ top: 35, right: 20, bottom: 5, left: 0 }}>
-                <Line type="monotone" dataKey="bandwidth" stroke="#8884d8" />
-                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-            </LineChart>
+            <Grid>
+                <Box>
+                    <Title>Total</Title>
+                    <Value>{overview?(data.incoming + data.outgoing).toFixed(1):formatNumber(data.incoming + data.outgoing)}<span>GB</span></Value>
+                </Box>
+                <Box>
+                    <Title>Inbound</Title>
+                    <Value>{overview?data.incoming.toFixed(1):formatNumber(data.incoming)}<span>GB</span></Value>
+                </Box>
+                <Box>
+                    <Title>Outbound</Title>
+                    <Value>{overview?data.outgoing.toFixed(1):formatNumber(data.outgoing)}<span>GB</span></Value>
+                </Box> 
+            </Grid>
+            
+            <div style={{margin: "100px 0"}}>
+                <Chart
+                    options={{
+                        chart: {
+                            id: 'wade-cdn-traffic',
+                        },
+                        xaxis: {
+                            categories: date,
+                        }
+                    }} 
+                    series={[
+                        {
+                            name: "Total Traffic",
+                            data: bandwidth
+                        }
+                    ]}
+                    type="area"
+                    height={400}
+                />
+            </div>
 
         </Container>
     );

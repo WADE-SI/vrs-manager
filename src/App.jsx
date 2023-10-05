@@ -7,27 +7,19 @@ import GlobalStyles from './GlobalStyles';
 
 // pages
 import Main from './pages/Main';
-import Login from './pages/Login';
-import styled from 'styled-components';
+
+// Components
+import Menu from './components/Menu';
 
 const App = () => {
-
-  const C = styled.div`
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      height: 100vh;
-  `;
 
   return (
     <PrimeReactProvider>
       <BrowserRouter>
         <GlobalStyles />
-
+        <Menu />
         <Routes>
           <Route path="/" element={<Main />}></Route>
-          <Route path="/login" element={<C><Login /></C>}></Route>
         </Routes>
           
 			</BrowserRouter>
